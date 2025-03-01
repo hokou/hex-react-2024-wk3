@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import axios from "axios"
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -23,46 +23,64 @@ function App() {
     })
   }
 
-  const handleLogin = (e) => {
+  const getProducts = async () => {
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/v2/api/${API_PATH}/admin/products`
+      );
+      setProducts(res.data.products);
+    } catch (error) {
+      alert("取得產品失敗");
+      console.error(error);
+    }
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    axios.post(`${BASE_URL}/v2/admin/signin`, account)
-      .then((res) => {
-        const { token, expired } = res.data;
-        document.cookie = `hexToken=${token}; expires=${ new Date(expired)}`;
-        setIsAuth(true);
+    try {
+      const res = await axios.post(`${BASE_URL}/v2/admin/signin`, account);
 
-        axios.defaults.headers.common['Authorization'] = token;
+      const { token, expired } = res.data;
+      document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
 
-        axios.get(`${BASE_URL}/v2/api/${API_PATH}/admin/products`)
-          .then((res) => {
-            setProducts(res.data.products);
-          })
-          .catch((err) => {
-            console.error(err);
-          })
-      })
-      .catch((err) => {
-        alert("登入失敗");
-        console.error(err);
-      })
+      axios.defaults.headers.common["Authorization"] = token;
+
+      getProducts();
+
+      setIsAuth(true);
+    } catch (error) {
+      alert("取得產品失敗");
+      console.error(error);
+    }
+  };
+
+  const checkUserLogin = async () => {
+    try {
+      await axios.post(`${BASE_URL}/v2/api/user/check`);
+      getProducts();
+      setIsAuth(true);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  const checkLogin = () => {
-    axios.post(`${BASE_URL}/v2/api/user/check`)
-      .then((res) => alert("使用者已登入"))
-      .catch((err) => {
-        console.error(err);
-      })
-  }
+  useEffect(() => {
+    const token = document.cookie.replace(
+      /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,
+      "$1",
+    );
+    axios.defaults.headers.common['Authorization'] = token;
+
+    checkUserLogin();
+  }, [])
 
   return (
     <>
     { isAuth ? (
     <div className="container py-5">
       <div className="row">
-        <div className="col-6">
-          <button onClick={checkLogin} className="btn btn-success mb-5" type="button">檢查使用者是否登入</button>
+        <div className="col">
           <h2>產品列表</h2>
           <table className="table">
             <thead>
@@ -94,36 +112,6 @@ function App() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="col-6">
-          <h2>單一產品細節</h2>
-          {tempProduct.title ? (
-            <div className="card">
-              <img
-                src={tempProduct.imageUrl}
-                className="card-img-top img-fluid"
-                alt={tempProduct.title}
-              />
-              <div className="card-body">
-                <h5 className="card-title">
-                  {tempProduct.title}
-                  <span className="badge text-bg-primary">
-                    {tempProduct.category}
-                  </span>
-                </h5>
-                <p className="card-text">商品描述：{tempProduct.description}</p>
-                <p className="card-text">商品內容：{tempProduct.content}</p>
-                <p className="card-text">
-                  <del>{tempProduct.origin_price} 元</del> / {tempProduct.price}{" "}
-                  元
-                </p>
-                <h5 className="card-title">更多圖片：</h5>
-                {tempProduct.imagesUrl?.map((image) => (image && (<img key={image} src={image} className="img-fluid" />)))}
-              </div>
-            </div>
-          ) : (
-            <p>請選擇一個商品查看</p>
-          )}
         </div>
       </div>
     </div>
