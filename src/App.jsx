@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react"
 import axios from "axios"
-import { Modal } from 'bootstrap';
+import { Modal } from "bootstrap";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_PATH = import.meta.env.VITE_API_PATH;
 
@@ -62,7 +62,7 @@ function App() {
 
       setIsAuth(true);
     } catch (error) {
-      alert("取得產品失敗");
+      alert("登入失敗");
       console.error(error);
     }
   };
@@ -82,7 +82,7 @@ function App() {
       /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,
       "$1",
     );
-    axios.defaults.headers.common['Authorization'] = token;
+    axios.defaults.headers.common["Authorization"] = token;
 
     checkUserLogin();
   }, []);
@@ -103,10 +103,10 @@ function App() {
   const handleOpenProductModal = (mode, product) => {
     setModalMode(mode);
     switch (mode) {
-      case 'create':
+      case "create":
         setTempProduct(defaultModalState);
         break;
-      case 'edit':
+      case "edit":
         setTempProduct(product);
         break;
       default:
@@ -153,7 +153,7 @@ function App() {
   };
 
   const handleAddImage = () => {
-    const newImages = [...tempProduct.imagesUrl, ''];
+    const newImages = [...tempProduct.imagesUrl, ""];
 
     setTempProduct({
       ...tempProduct,
@@ -213,7 +213,7 @@ function App() {
   };
 
   const handleUpdateProduct = async () => {
-    const apiCall = modalMode === 'create' ? createProduct : updateProduct;
+    const apiCall = modalMode === "create" ? createProduct : updateProduct;
     try {
       await apiCall();
       getProducts();
